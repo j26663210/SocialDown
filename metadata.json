@@ -1,0 +1,5 @@
+{
+  "name": "Social Media Downloader",
+  "description": "A web application to download and convert videos from popular social media platforms like YouTube, Facebook, Instagram, and Threads into MP4 or MP3 formats.",
+  "requestFramePermissions": []
+}
