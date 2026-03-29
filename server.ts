@@ -16,7 +16,6 @@ async function startServer() {
     try {
       let title = "Downloaded Media";
       let thumbnail = "https://picsum.photos/seed/video/320/180";
-      let downloadUrl = "https://www.w3schools.com/html/mov_bbb.mp4"; // Fallback video
       
       if (platform === 'youtube') {
         try {
@@ -52,20 +51,42 @@ async function startServer() {
         }
       }
 
-      // Simulate processing time
-      setTimeout(() => {
-        res.json({
-          success: true,
-          message: "Download ready",
-          data: {
-            title,
-            downloadUrl,
-            thumbnail,
-            format,
-            quality
-          }
-        });
-      }, 2000);
+      // Map format and quality to loader.to format
+      let loaderFormat = '720';
+      if (format === 'mp4') {
+        if (quality === 'high') loaderFormat = '1080';
+        else if (quality === 'medium') loaderFormat = '720';
+        else if (quality === 'low') loaderFormat = '360';
+      } else if (format === 'mp3') {
+        loaderFormat = 'mp3';
+      }
+
+      // Call loader.to API
+      const loaderUrl = `https://loader.to/ajax/download.php?button=1&start=1&end=1&format=${loaderFormat}&url=${encodeURIComponent(url)}`;
+      const loaderRes = await fetch(loaderUrl);
+      
+      if (!loaderRes.ok) {
+        throw new Error("Failed to initiate download with provider");
+      }
+      
+      const loaderData = await loaderRes.json();
+      
+      if (!loaderData.success || !loaderData.id) {
+        throw new Error("Provider returned an error");
+      }
+
+      res.json({
+        success: true,
+        message: "Download initiated",
+        data: {
+          title: loaderData.title || title,
+          thumbnail: loaderData.info?.image || thumbnail,
+          format,
+          quality,
+          jobId: loaderData.id,
+          progressUrl: loaderData.progress_url || `https://p.savenow.to/api/progress?id=${loaderData.id}`
+        }
+      });
 
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message || "Failed to process video" });

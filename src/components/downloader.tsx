@@ -75,30 +75,77 @@ export function Downloader() {
         body: JSON.stringify({ url, format, quality, platform })
       });
       
-      const data = await response.json();
-      
-      clearInterval(interval);
-      setProgress(100);
-      
-      if (data.success) {
-        setResult(data.data);
-        setStatus('success');
-        
-        // Save to history
-        const history = JSON.parse(localStorage.getItem('downloadHistory') || '[]');
-        history.unshift({
-          id: Date.now().toString(),
-          url,
-          platform,
-          format,
-          quality,
-          title: data.data.title,
-          date: new Date().toISOString()
-        });
-        localStorage.setItem('downloadHistory', JSON.stringify(history.slice(0, 50)));
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
       } else {
-        throw new Error(data.message || 'Download failed');
+        const text = await response.text();
+        console.error("Non-JSON response:", text);
+        throw new Error(`伺服器錯誤 (Server Error): ${response.status} ${response.statusText}`);
       }
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Download initiation failed');
+      }
+
+      const { jobId, progressUrl, title, thumbnail } = data.data;
+      
+      // Start polling
+      let pollCount = 0;
+      const maxPolls = 80; // 80 * 1.5s = 120s timeout
+      
+      const pollProgress = async () => {
+        try {
+          pollCount++;
+          if (pollCount > maxPolls) {
+            throw new Error("Download timed out. The video might be unavailable or too long.");
+          }
+          
+          const progressRes = await fetch(progressUrl);
+          const progressData = await progressRes.json();
+          
+          if (progressData.success === 1 && progressData.download_url) {
+            clearInterval(interval);
+            setProgress(100);
+            setResult({
+              title: title,
+              thumbnail: thumbnail,
+              downloadUrl: progressData.download_url,
+              format,
+              quality
+            });
+            setStatus('success');
+            
+            // Save to history
+            const history = JSON.parse(localStorage.getItem('downloadHistory') || '[]');
+            history.unshift({
+              id: Date.now().toString(),
+              url,
+              platform,
+              format,
+              quality,
+              title: title,
+              date: new Date().toISOString()
+            });
+            localStorage.setItem('downloadHistory', JSON.stringify(history.slice(0, 50)));
+          } else if (progressData.success === 0) {
+            // Update progress
+            const currentProgress = progressData.progress ? progressData.progress / 10 : 0;
+            setProgress(Math.max(10, currentProgress)); // Keep at least 10% from the fake progress
+            setTimeout(pollProgress, 1500);
+          } else {
+            throw new Error(progressData.text || "Download failed during processing");
+          }
+        } catch (e: any) {
+          clearInterval(interval);
+          setErrorMsg(e.message || "Failed to check download progress");
+          setStatus('error');
+        }
+      };
+
+      pollProgress();
+
     } catch (err: any) {
       clearInterval(interval);
       setErrorMsg(err.message || '發生錯誤，請稍後再試 (An error occurred)');

@@ -3,6 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src
 
 const changelogData = [
   {
+    version: "v1.2.0",
+    date: "2026-03-29",
+    changes: [
+      "Integrated third-party download API (loader.to) for real video downloads (整合第三方下載 API，實現真實的影片下載功能)",
+      "Implemented download progress polling mechanism (新增下載進度輪詢機制，即時顯示下載狀態)",
+      "Added timeout handling for invalid URLs or long downloads (優化錯誤處理，處理無效網址或下載超時的情況)",
+      "Fixed JSON parsing error when server returns HTML (修復伺服器回傳非 JSON 格式時的解析錯誤)"
+    ]
+  },
+  {
     version: "v1.1.0",
     date: "2026-03-29",
     changes: [
