@@ -69,7 +69,8 @@ export function Downloader() {
     }, 500);
 
     try {
-      const response = await fetch('/api/download', {
+      const apiUrl = window.location.origin + '/api/download?t=' + Date.now();
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format, quality, platform })

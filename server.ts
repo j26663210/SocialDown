@@ -9,8 +9,18 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Handle OPTIONS request for CORS preflight
+  app.options("/api/download", (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.sendStatus(200);
+  });
+
   // API for downloading
   app.post("/api/download", async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    console.log("Received POST /api/download request:", req.body);
     const { url, format, quality, platform } = req.body;
     
     try {
