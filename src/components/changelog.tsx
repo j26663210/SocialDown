@@ -3,6 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src
 
 const changelogData = [
   {
+    version: "v1.1.0",
+    date: "2026-03-29",
+    changes: [
+      "Implemented real metadata fetching for YouTube via oEmbed API (實作 YouTube 真實影片標題與縮圖抓取)",
+      "Added generic OpenGraph metadata scraper for Facebook, Instagram, and Threads (加入 Facebook, IG, Threads 的真實標題與縮圖抓取)",
+      "Enhanced backend API to process real URLs instead of mock data (強化後端 API 以處理真實網址)"
+    ]
+  },
+  {
+    version: "v1.0.1",
+    date: "2026-03-29",
+    changes: [
+      "Fixed an issue where the 'asChild' prop was not recognized by the Button component (修復 Button 元件無法識別 'asChild' 屬性的問題)"
+    ]
+  },
+  {
     version: "v1.0.0",
     date: "2026-03-29",
     changes: [
